@@ -1,11 +1,9 @@
-<!-- eslint-disable vue/no-use-v-if-with-v-for,vue/no-confusing-v-for-v-if -->
-
 <template>
   <div class="calendar-view">
     <div class="calendar-view__controls">
       <div class="calendar-view__controls-inner">
         <button class="calendar-view__control-left" type="button" @click="previousMonth()" aria-label="Previous month"></button>
-        <div class="calendar-view__date">{{ normalDate }}</div>
+        <div class="calendar-view__date">{{ normalizedDate }}</div>
         <button class="calendar-view__control-right" type="button" @click="nextMonth()" aria-label="Next month"></button>
       </div>
     </div>
@@ -22,7 +20,7 @@
       <div class="calendar-view__cell" tabindex="0" v-for="number in lastDateOfMonth" :key="number">
         <div class="calendar-view__cell-day"> {{ number }}</div>
         <div class="calendar-view__cell-content"
-          v-for="meetup in IsMeetupinDay(number)"
+          v-for="meetup in IsMeetupInDay(number)"
           :key="meetup"
         >
         <a :href="`/meetups/${meetup.id}`" class="calendar-event">{{ meetup.title }}</a>
@@ -30,7 +28,6 @@
       </div>
       <div class="calendar-view__cell calendar-view__cell_inactive" tabindex="0" v-for="day in nextMonthCalendar" :key="day">
         <div class="calendar-view__cell-day">{{ day }}</div>
-        <!-- <div class="calendar-view__cell-content"></div> -->
       </div>
     </div>
   </div>
@@ -43,7 +40,7 @@ export default {
 
   data() {
     return {
-      currentDate: new Date(),
+      currentDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     };
   },
 
@@ -55,10 +52,11 @@ export default {
   },
   computed: {
 
-    normalDate() {
+    normalizedDate() {
       return this.currentDate.toLocaleString(navigator.language, {
         year: 'numeric',
         month: 'long',
+
       });
     },
 
@@ -89,12 +87,9 @@ export default {
     nextMonthCalendar() {
       let nextDaysinCalendar = [];
       for (let i = this.lastDayOfMonth; i < 6; i++) {
-
         nextDaysinCalendar.push(i - this.lastDayOfMonth + 1);
       }
-      console.log(this.lastDayOfMonth);
-      console.log(this.lastDateOfMonth);
-    return nextDaysinCalendar;
+      return nextDaysinCalendar;
     },
   },
 
@@ -107,10 +102,9 @@ export default {
       return this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() - 1));
     },
 
-    IsMeetupinDay(value) {
+    IsMeetupInDay(value) {
       const dateInCalendar = new Date(this.currentDate.getFullYear() ,this.currentDate.getMonth(), value, 3, 0, 0, 0).getTime();
-       const flt = this.meetups.filter(({ date }) => date === dateInCalendar);
-       return flt;
+       return this.meetups.filter(({ date }) => date === dateInCalendar);
     }
   },
 };

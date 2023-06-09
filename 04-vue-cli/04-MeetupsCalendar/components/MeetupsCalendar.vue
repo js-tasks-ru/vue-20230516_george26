@@ -40,7 +40,7 @@ export default {
 
   data() {
     return {
-      currentDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      currentDate: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1)),
     };
   },
 

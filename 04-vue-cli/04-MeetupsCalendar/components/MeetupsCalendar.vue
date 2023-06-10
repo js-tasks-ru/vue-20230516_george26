@@ -66,21 +66,19 @@ export default {
     },
 
     firstDayOfMonth() {
-      console.log(new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 0).getDay())
-      return new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 0).getDay();
+      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), 0).getDay();
     },
 
     lastDateOfMonth() {
-      console.log(new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0).getDate())
-      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getMonth() + 1, 0).getDate();
+      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth() + 1, 0).getUTCDate() + 1;
     },
 
     lastDayOfMonth() {
-      return new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.lastDateOfMonth - 1).getDay();
+      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), this.lastDateOfMonth - 1).getUTCDay() + 1;
     },
 
     lastDateOfPreviousMonth() {
-      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), 0).getDate();
+      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), 0).getUTCDate() + 1;
     },
 
     previousMonthInCalendar() {

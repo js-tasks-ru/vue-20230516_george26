@@ -56,8 +56,6 @@ export default {
   data() {
     return {
       opened: false,
-      menuItem: 'none',
-      value: '',
     }
   },
 

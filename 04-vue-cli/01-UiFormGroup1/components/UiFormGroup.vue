@@ -1,5 +1,5 @@
 <template>
-  <div :class=viewInline>
+  <div :class=viewInline class="form-group">
     <!-- form-group_inline -->
     <label v-if="isLabel" class="form-group__label">{{ label }}</label>
     <!-- CONTENT -->
@@ -25,7 +25,11 @@ export default {
 
   computed: {
     viewInline() {
-      return this.inline ? 'form-group_inline' : 'form-group';
+      let formClass = '';
+      if (this.inline) {
+        formClass = 'form-group_inline';
+      }
+      return formClass;
     },
 
     isLabel() {

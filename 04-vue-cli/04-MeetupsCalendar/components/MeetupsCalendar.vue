@@ -20,16 +20,13 @@
       <div class="calendar-view__cell" tabindex="0" v-for="number in lastDateOfMonth" :key="number">
         <div class="calendar-view__cell-day"> {{ number }}</div>
         <div class="calendar-view__cell-content"
-          v-for="meetup in IsMeetupInDay"
-          :key="meetup"
         >
-        <a v-if="new Date(meetup.date).getDate() === number"
-          :href="`/meetups/${meetup.id}`"
+        <a
+          v-if="isMeetupInDay[new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), number).getTime()]"
+          :href="`/meetups/${123}`"
           class="calendar-event"
         >
-          {{ [ new Date(new Date(meetup.date).getFullYear(), new Date(meetup.date).getMonth(), new Date(meetup.date).getDate()), new Date(new Date(meetup.date).getUTCFullYear(), new Date(meetup.date).getUTCMonth(), new Date(meetup.date).getUTCDate())] }}
-          <!-- Thu Jun 08 2023 03:00:00 GMT+0300 (Москва, стандартное время)  -->
-          <!-- Wed Jun 07 2023 20:00:00 GMT-0400 (Восточная Америка, летнее время) -->
+          {{  isMeetupInDay[new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), number).getTime()][0].title }}
         </a>
         </div>
       </div>
@@ -68,6 +65,7 @@ export default {
     },
 
     firstDayOfMonth() {
+      console.log(new Date('2023-04-15'));
       return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), 0).getUTCDay();
     },
 
@@ -99,27 +97,29 @@ export default {
       return nextDaysinCalendar;
     },
 
-    IsMeetupInDay() {
-      const datesInCalendar = [];
-      for (let i = 1; i <= this.lastDateOfMonth; i++) {
-        // datesInCalendar.push();
-        datesInCalendar.push(this.meetups.filter(({ date }) => {
-          // console.log(new Date(new Date(date).getUTCFullYear(), new Date(date).getUTCMonth(), new Date(date).getUTCDate(), 0).getDay())
-          // new Date(new Date(date).getUTCFullYear(), new Date(date).getUTCMonth(), new Date(date).getUTCDate(), 0).getTime()
-          return date === new Date(this.currentDate.getFullYear() , this.currentDate.getUTCMonth(), i, 0, 0, 0, 0).getTime()
-        }))
-        console.log(new Date(datesInCalendar.flat()[0]));
-          // console.log(new Date(date).getHours())
-          // console.log(this.currentDate.getUTCHours())
-          // console.log(this.currentDate.getHours())
-          // console.log(new Date(new Date(date).getUTCFullYear(),new Date(date).getUTCMonth(), new Date(date).getUTCDate(), new Date(date).getUTCHours()));
-          // console.log(new Date(new Date(date).getFullYear(),new Date(date).getMonth(), new Date(date).getDate(), new Date(date).getHours()));
+    // allDateCurrentMonth() {
+    //   const res = [];
+    //   for (let i = 1; i <= this.lastDateOfMonth; i++) {
+    //     console.log(i)
+    //   }
+    //   return res;
+    // },
+
+    isMeetupInDay() {
+      const result = {};
+      for (const meetup of this.meetups) {
+        const utcMeetupYear = new Date(new Date(meetup.date).getUTCFullYear());
+        const utcMeetupMonth = new Date(meetup.date).getUTCMonth();
+        const utcMeetupDate = new Date(meetup.date).getUTCDate();
+        const utcMeetup = new Date(utcMeetupYear, utcMeetupMonth, utcMeetupDate).getTime();
+        if (!result[meetup.date]) {
+          result[utcMeetup] = [meetup];
+        } else {
+          result[utcMeetup].push(meetup);
+        }
       }
-       return datesInCalendar.flat();
+      return result;
     },
-
-
-
   },
 
   methods: {

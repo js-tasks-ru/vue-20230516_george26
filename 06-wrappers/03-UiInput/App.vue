@@ -1,6 +1,6 @@
 <template>
   <div class="sample container">
-    <button type="button" @click="$refs['firstInput'].focus()">Focus first input</button>
+    <button type="button" @click="['firstInput'].focus()">Focus first input</button>
     <button type="button" @click="$refs['firstInput'].$refs['input'].focus()">Focus first input 2</button>
 
     <UiFormGroup>
@@ -20,7 +20,7 @@
     </UiFormGroup>
 
     <UiFormGroup label="Textarea">
-      <UiInput v-model="value" multiline />
+      <UiInput v-model="value" multiline/>
     </UiFormGroup>
 
     <UiFormGroup label="With Lazy">

@@ -1,32 +1,31 @@
 <template>
   <fieldset class="agenda-item-form">
-    <button type="button" class="agenda-item-form__remove-button">
+    <button type="button" class="agenda-item-form__remove-button" @click.prevent="$emit('remove')">
       <UiIcon icon="trash" />
     </button>
 
     <UiFormGroup>
-      <UiDropdown title="Тип" :options="$options.agendaItemTypeOptions" name="type" />
+      <UiDropdown title="Тип" :options="$options.agendaItemTypeOptions" name="type" v-model="localAgendaItem.type"/>
     </UiFormGroup>
 
     <div class="agenda-item-form__row">
       <div class="agenda-item-form__col">
         <UiFormGroup label="Начало">
-          <UiInput type="time" placeholder="00:00" name="startsAt" />
+          <UiInput v-model="localAgendaItem.startsAt" @change="getTime" type="time" placeholder="00:00" name="startsAt" />
         </UiFormGroup>
       </div>
       <div class="agenda-item-form__col">
         <UiFormGroup label="Окончание">
-          <UiInput type="time" placeholder="00:00" name="endsAt" />
+          <UiInput v-model="localAgendaItem.endsAt" @change="setInterval" type="time" placeholder="00:00" name="endsAt" />
         </UiFormGroup>
       </div>
     </div>
 
-    <UiFormGroup label="Заголовок">
-      <UiInput name="title" />
-    </UiFormGroup>
-    <UiFormGroup label="Описание">
-      <UiInput multiline name="description" />
-    </UiFormGroup>
+    <template v-for="(data, key) in typeOfProgramm" :key="key">
+      <UiFormGroup :label="data.label">
+        <component :is="data.component" v-model="localAgendaItem[key]" v-bind="data.props"/>
+      </UiFormGroup>
+    </template>
   </fieldset>
 </template>
 
@@ -35,6 +34,7 @@ import UiIcon from './UiIcon.vue';
 import UiFormGroup from './UiFormGroup.vue';
 import UiInput from './UiInput.vue';
 import UiDropdown from './UiDropdown.vue';
+import { klona } from 'klona/json';
 
 const agendaItemTypeIcons = {
   registration: 'key',
@@ -159,11 +159,72 @@ export default {
   agendaItemTypeOptions,
   agendaItemFormSchemas,
 
+  data() {
+    return {
+      localAgendaItem: klona(this.agendaItem),
+    }
+  },
+
   props: {
     agendaItem: {
       type: Object,
       required: true,
     },
+  },
+
+  methods: {
+    getTime() {
+      const startsAt = this.parseTime(this.localAgendaItem.startsAt);
+      const endsAt = {
+        hours: (startsAt.hours + this.interval.hours) % 24,
+        minutes: (startsAt.minutes + this.interval.minutes) % 60,
+      };
+      const resultEndTime = `${String(endsAt.hours).padStart(2, 0)}:${String(endsAt.minutes).padStart(2, 0)}`;
+
+      this.localAgendaItem.endsAt = resultEndTime;
+    },
+
+    setInterval() {
+      const startsAt = this.parseTime(this.localAgendaItem.startsAt);
+      const endsAt = this.parseTime(this.localAgendaItem.endsAt);
+
+      const intervalHours = endsAt.hours  - startsAt.hours;
+      const intervalMinutes = endsAt.minutes - startsAt.minutes;
+
+      this.interval = {
+        hours: intervalHours,
+        minutes: intervalMinutes,
+      };
+    },
+
+    parseTime(value) {
+      const [hours, minutes] = value.split(':');
+      return {
+        hours: Number(hours),
+        minutes: Number(minutes),
+      };
+    },
+  },
+
+  computed: {
+    typeOfProgramm() {
+     return agendaItemFormSchemas[this.localAgendaItem.type];
+    }
+  },
+
+  watch: {
+    localAgendaItem: {
+      deep: true,
+      handler(newValue) {
+        this.$emit('update:agendaItem', klona(newValue));
+      }
+    }
+  },
+
+  emits: ['update:agendaItem', 'remove'],
+
+  created() {
+    this.setInterval();
   },
 };
 </script>

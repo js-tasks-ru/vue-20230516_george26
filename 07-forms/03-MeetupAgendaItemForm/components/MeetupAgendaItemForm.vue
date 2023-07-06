@@ -1,38 +1,37 @@
 <template>
   <fieldset class="agenda-item-form">
-    <button type="button" class="agenda-item-form__remove-button">
+    <button type="button" class="agenda-item-form__remove-button" @click.prevent="$emit('remove')">
       <UiIcon icon="trash" />
     </button>
-
     <UiFormGroup>
-      <UiDropdown title="Тип" :options="$options.agendaItemTypeOptions" name="type" />
+      <UiDropdown title="Тип" :options="$options.agendaItemTypeOptions" name="type" v-model="localAgendaItem.type" />
     </UiFormGroup>
 
     <div class="agenda-item-form__row">
       <div class="agenda-item-form__col">
         <UiFormGroup label="Начало">
-          <UiInput type="time" placeholder="00:00" name="startsAt" />
+          <UiInput v-model="localAgendaItem.startsAt" @change="getTime" type="time" placeholder="00:00" name="startsAt" />
         </UiFormGroup>
       </div>
       <div class="agenda-item-form__col">
         <UiFormGroup label="Окончание">
-          <UiInput type="time" placeholder="00:00" name="endsAt" />
+          <UiInput v-model="localAgendaItem.endsAt" @change="setInterval" type="time" placeholder="00:00" name="endsAt" />
         </UiFormGroup>
       </div>
     </div>
 
-    <UiFormGroup label="Тема">
-      <UiInput name="title" />
-    </UiFormGroup>
-    <UiFormGroup label="Докладчик">
-      <UiInput name="speaker" />
-    </UiFormGroup>
-    <UiFormGroup label="Описание">
-      <UiInput multiline name="description" />
-    </UiFormGroup>
-    <UiFormGroup label="Язык">
-      <UiDropdown title="Язык" :options="$options.talkLanguageOptions" name="language" />
-    </UiFormGroup>
+      <UiFormGroup :label="labelTitle">
+        <UiInput name="title" v-model="localAgendaItem.title"/>
+      </UiFormGroup>
+      <UiFormGroup v-if="isTalk" label="Докладчик">
+        <UiInput v-model="localAgendaItem.speaker" name="speaker" />
+      </UiFormGroup>
+      <UiFormGroup v-if="isTalk || isOther" label="Описание">
+        <UiInput v-model="localAgendaItem.description" multiline name="description" />
+      </UiFormGroup>
+      <UiFormGroup v-if="isTalk" label="Язык">
+        <UiDropdown v-model="localAgendaItem.language" title="Язык" :options="$options.talkLanguageOptions" name="language" />
+      </UiFormGroup>
   </fieldset>
 </template>
 
@@ -41,6 +40,7 @@ import UiIcon from './UiIcon.vue';
 import UiFormGroup from './UiFormGroup.vue';
 import UiInput from './UiInput.vue';
 import UiDropdown from './UiDropdown.vue';
+import { klona } from 'klona/json';
 
 const agendaItemTypeIcons = {
   registration: 'key',
@@ -84,11 +84,87 @@ export default {
 
   components: { UiIcon, UiFormGroup, UiInput, UiDropdown },
 
+  data() {
+    return {
+      localAgendaItem: klona(this.agendaItem),
+    }
+  },
+
   props: {
     agendaItem: {
       type: Object,
       required: true,
     },
+  },
+
+  methods: {
+    getTime() {
+      const startsAt = this.parseTime(this.localAgendaItem.startsAt);
+      const endsAt = {
+        hours: (startsAt.hours + this.interval.hours) % 24,
+        minutes: (startsAt.minutes + this.interval.minutes) % 60,
+      };
+      const resultEndTime = `${String(endsAt.hours).padStart(2, 0)}:${String(endsAt.minutes).padStart(2, 0)}`;
+
+      this.localAgendaItem.endsAt = resultEndTime;
+    },
+
+    setInterval() {
+      const startsAt = this.parseTime(this.localAgendaItem.startsAt);
+      const endsAt = this.parseTime(this.localAgendaItem.endsAt);
+
+      const intervalHours = endsAt.hours  - startsAt.hours;
+      const intervalMinutes = endsAt.minutes - startsAt.minutes;
+
+      this.interval = {
+        hours: intervalHours,
+        minutes: intervalMinutes,
+      };
+    },
+
+    parseTime(value) {
+      const [hours, minutes] = value.split(':');
+      return {
+        hours: Number(hours),
+        minutes: Number(minutes),
+      };
+    },
+  },
+
+  computed: {
+    isTalk() {
+      return this.localAgendaItem.type === 'talk';
+    },
+
+    isOther() {
+      return this.localAgendaItem.type === 'other';
+    },
+
+    labelTitle() {
+      switch(this.localAgendaItem.type) {
+        case 'talk':
+          return 'Тема';
+        case 'other':
+          return 'Заголовок';
+        default:
+          return 'Нестандартный текст (необязательно)';
+      }
+    },
+  },
+
+  watch: {
+    localAgendaItem: {
+      deep: true,
+      handler(newValue) {
+        this.$emit('update:agendaItem', klona(newValue));
+      }
+    },
+  },
+
+  emits: ['update:agendaItem', 'remove'],
+
+  created() {
+    this.setInterval();
   },
 };
 </script>

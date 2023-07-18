@@ -1,8 +1,20 @@
 <template>
   <div class="image-uploader">
-    <label class="image-uploader__preview image-uploader__preview-loading" style="--bg-url: url('/link.jpeg')">
-      <span class="image-uploader__text">Загрузить изображение</span>
-      <input type="file" accept="image/*" class="image-uploader__input" />
+    <label class="image-uploader__preview"
+      :class="{'image-uploader__preview-loading': isProcessing}"
+      :style="isProcessed ?  `--bg-url: url(${preview})` : ''" >
+      <span class="image-uploader__text">{{ description }}</span>
+      <component
+        :is="isProcessed ? 'button' : 'input'"
+        ref="input"
+        :disabled="isProcessing"
+        v-bind="$attrs"
+        type="file"
+        accept="image/*"
+        class="image-uploader__input"
+        @change="uploadImage"
+        @click="removeImage"
+      />
     </label>
   </div>
 </template>
@@ -10,6 +22,77 @@
 <script>
 export default {
   name: 'UiImageUploader',
+
+  inheritAttrs: false,
+
+  data() {
+    return {
+      state: null,
+    }
+  },
+
+  created() {
+    this.state = this.preview ? 'processed' : 'filling';
+  },
+
+  methods: {
+    uploadImage(event) {
+      const [file] = event.target.files;
+      this.$emit('select', file);
+
+      if (this.uploader) {
+        this.state = 'processing';
+        this.asyncLoader(file);
+      } else {
+        this.$emit('upload', {image: URL.createObjectURL(file)});
+        this.state = 'processed';
+      }
+    },
+
+    asyncLoader(file) {
+      this.uploader(file)
+      .then((data) => {
+        this.$emit('upload', data);
+        this.state = 'processed';
+      })
+      .catch((err) => {
+        this.$emit('error', err);
+        this.$refs['input'].value = '';
+        this.state = 'filling';
+      })
+    },
+
+    removeImage() {
+      this.$emit('remove');
+      this.state = 'filling';
+    }
+  },
+
+  props: {
+    preview: String,
+    uploader: Function,
+  },
+
+  emits: ['upload', 'error', 'remove', 'select'],
+
+  computed: {
+    description() {
+      const descriptions = {
+        filling: "Загрузить изображение",
+        processing: "Загрузка...",
+        processed: "Удалить изображение",
+      };
+      return descriptions[this.state]
+    },
+
+    isProcessing() {
+      return this.state === 'processing';
+    },
+
+    isProcessed() {
+      return this.state === 'processed';
+    },
+  }
 };
 </script>
 

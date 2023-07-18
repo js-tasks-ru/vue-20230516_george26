@@ -1,10 +1,22 @@
 <template>
-  <a class="link">Link!</a>
+  <component :is="tag" v-bind="$attrs" class="link">
+    <slot />
+  </component>
 </template>
 
 <script>
+import { RouterLink } from 'vue-router';
+
 export default {
-  name: 'UiLink',
+    name: "UiLink",
+    props: {
+        tag: {
+          type: [String, Object, Function],
+          default: 'router-link'
+        },
+    },
+    inheritAttrs: false,
+    components: { RouterLink }
 };
 </script>
 

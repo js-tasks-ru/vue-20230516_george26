@@ -20,14 +20,13 @@
       <div class="calendar-view__cell" tabindex="0" v-for="number in lastDateOfMonth" :key="number">
         <div class="calendar-view__cell-day"> {{ number }}</div>
         <div class="calendar-view__cell-content"
-          v-for="meetup in IsMeetupInDay"
-          :key="meetup"
         >
-        <a v-if="new Date(meetup.date).getDate() === number"
-          :href="`/meetups/${meetup.id}`"
+        <a
+          v-if="isMeetupInDay[new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), number).getTime()]"
+          :href="`/meetups/${123}`"
           class="calendar-event"
         >
-          {{ meetup.title }}
+          {{  isMeetupInDay[new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), number).getTime()][0].title }}
         </a>
         </div>
       </div>
@@ -45,7 +44,7 @@ export default {
 
   data() {
     return {
-      currentDate: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)),
+      currentDate: new Date(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1, new Date().getUTCHours()),
     };
   },
 
@@ -66,19 +65,20 @@ export default {
     },
 
     firstDayOfMonth() {
-      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), 0).getDay();
+      console.log(new Date('2023-04-15'));
+      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), 0).getUTCDay();
     },
 
     lastDateOfMonth() {
-      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth() + 1, 0).getUTCDate() + 1;
+      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth() + 1, 0).getUTCDate();
     },
 
     lastDayOfMonth() {
-      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), this.lastDateOfMonth - 1).getUTCDay() + 1;
+      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), this.lastDateOfMonth - 1).getUTCDay();
     },
 
     lastDateOfPreviousMonth() {
-      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), 0).getUTCDate() + 1;
+      return new Date(this.currentDate.getUTCFullYear(), this.currentDate.getUTCMonth(), 0).getUTCDate();
     },
 
     previousMonthInCalendar() {
@@ -97,25 +97,38 @@ export default {
       return nextDaysinCalendar;
     },
 
-    IsMeetupInDay() {
-      const datesInCalendar = [];
-      for (let i = 1; i <= this.lastDateOfMonth; i++) {
-        datesInCalendar.push(this.meetups.filter(({ date }) => date === new Date(this.currentDate.getUTCFullYear() ,this.currentDate.getUTCMonth(), i, 3, 0, 0, 0).getTime()));
+    // allDateCurrentMonth() {
+    //   const res = [];
+    //   for (let i = 1; i <= this.lastDateOfMonth; i++) {
+    //     console.log(i)
+    //   }
+    //   return res;
+    // },
+
+    isMeetupInDay() {
+      const result = {};
+      for (const meetup of this.meetups) {
+        const utcMeetupYear = new Date(new Date(meetup.date).getUTCFullYear());
+        const utcMeetupMonth = new Date(meetup.date).getUTCMonth();
+        const utcMeetupDate = new Date(meetup.date).getUTCDate();
+        const utcMeetup = new Date(utcMeetupYear, utcMeetupMonth, utcMeetupDate).getTime();
+        if (!result[meetup.date]) {
+          result[utcMeetup] = [meetup];
+        } else {
+          result[utcMeetup].push(meetup);
+        }
       }
-       return datesInCalendar.flat();
+      return result;
     },
-
-
-
   },
 
   methods: {
     nextMonth() {
-      return this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() + 1));
+      return this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getUTCMonth() + 1));
     },
 
     previousMonth() {
-      return this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() - 1));
+      return this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getUTCMonth() - 1));
     },
   },
 };
